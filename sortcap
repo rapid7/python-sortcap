@@ -1,0 +1,34 @@
+#!/usr/bin/python
+# -*- coding: utf8 -*-
+
+import os
+import sys
+import argparse
+
+from pcaptools import sort_pcap, index_pcap, pcap_flowtuples
+
+def main(args):
+    sort_pcap(args.input, args.output)
+
+    conns_path = os.path.splitext(args.output)[0] + ".connlist"
+    with open(conns_path, "w") as fd:
+        for ft in pcap_flowtuples(args.output):
+            print >>fd, ",".join(str(i) for i in ft)
+
+    if args.index: index_pcap(args.output)
+    return 0
+
+def _main():
+    parser = argparse.ArgumentParser(description='sortcap')
+    parser.add_argument("--index", help="make sqlite for connections", action="store_true", default=False)
+    parser.add_argument("input", help="input pcap")
+    parser.add_argument("output", help="output pcap")
+
+    args = parser.parse_args()
+    r = main(args)
+    return r
+
+if __name__ == '__main__':
+    try: sys.exit(_main())
+    except KeyboardInterrupt: pass
+    except SystemExit: raise

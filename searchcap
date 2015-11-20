@@ -1,0 +1,48 @@
+#!/usr/bin/python
+# -*- coding: utf8 -*-
+
+import os
+import sys
+import argparse
+
+import sqlite3
+import prettytable
+
+def main(args):
+    field, value = args.search.split("=")
+
+    sqlite_path = os.path.splitext(args.pcap)[0] + ".index.sqlite"
+    db = sqlite3.connect(sqlite_path)
+    c = db.cursor()
+    if field == "ip":
+        c.execute("select * from streams where src = ? or dst = ?", (value, value))
+    elif field == "port":
+        value = int(value)
+        c.execute("select * from streams where sport = ? or dport = ?", (value, value))
+
+    p = prettytable.PrettyTable(["src", "sport", "dst", "dport", "proto", "offset"])
+
+    row = c.fetchone()
+    while row:
+        p.add_row(row[1:])
+        row = c.fetchone()
+
+    print p
+
+    c.close()
+    db.close()
+    return 0
+
+def _main():
+    parser = argparse.ArgumentParser(description='searchcap')
+    parser.add_argument("-p", "--pcap", help="indexed pcap")
+    parser.add_argument("search", help="search")
+
+    args = parser.parse_args()
+    r = main(args)
+    return r
+
+if __name__ == '__main__':
+    try: sys.exit(_main())
+    except KeyboardInterrupt: pass
+    except SystemExit: raise
