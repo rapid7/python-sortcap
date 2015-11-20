@@ -20,13 +20,13 @@ We just sort the pcap's packets, ordered by the "connection tuple" (src, sport, 
 Or with the Docker image:
 
 ```sh
-docker run --rm --net=none -v $PWD:/pcap r7labs/sortcap /pcap/input.pcap /pcap/output.pcap
+docker run --rm --net=none -v $PWD:/pcap r7labs/sortcap input.pcap output.pcap
 ```
 
 If you have a pcapng or pcapng.gz etc, you need to preprocess with mergecap
 
 ```sh
-docker run --rm --net=none -v $PWD:/pcap --entrypoint mergecap r7labs/sortcap -F pcap -w /pcap/output.pcap /pcap/input.pcapng.gz
+docker run --rm --net=none -v $PWD:/pcap --entrypoint mergecap r7labs/sortcap -F pcap -w output.pcap input.pcapng.gz
 ```
 
 ## Future work
