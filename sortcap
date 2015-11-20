@@ -21,8 +21,8 @@ def main(args):
 def _main():
     parser = argparse.ArgumentParser(description='sortcap')
     parser.add_argument("--index", help="make sqlite for connections", action="store_true", default=False)
-    parser.add_argument("input", help="input pcap")
-    parser.add_argument("output", help="output pcap")
+    parser.add_argument("-i", "--input", help="input pcap")
+    parser.add_argument("-o", "--output", help="output pcap")
 
     args = parser.parse_args()
     r = main(args)
