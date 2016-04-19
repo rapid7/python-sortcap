@@ -139,12 +139,13 @@ def batch_sort(input_iterator, output_path, buffer_size=1024**2, output_class=No
             if not current_chunk:
                 break
             current_chunk.sort()
-            output_chunk = output_class(os.path.join(TMPD, "%06i" % len(chunks)))
-            chunks.append(output_chunk)
+            output_chunk_name = os.path.join(TMPD, "%06i" % len(chunks))
+            output_chunk = output_class(output_chunk_name)
 
             for elem in current_chunk:
                 output_chunk.write(elem.obj)
             output_chunk.close()
+            chunks.append(input_iterator.__class__(output_chunk_name))
 
         output_file = output_class(output_path)
         for elem in heapq.merge(*chunks):
@@ -160,6 +161,19 @@ def batch_sort(input_iterator, output_path, buffer_size=1024**2, output_class=No
             except Exception:
                 pass
 
+class WriteCap(object):
+    def __init__(self, path, linktype=1):
+        self.name = path
+        self.linktype = linktype
+        self.fd = dpkt.pcap.Writer(open(self.name, "wb"), linktype=self.linktype)
+
+    def write(self, p):
+        self.fd.writepkt(p.raw, p.ts)
+
+    def close(self):
+        self.fd.close()
+        self.fd = None
+
 # magic
 class SortCap(object):
     """SortCap is a wrapper around the packet lib (dpkt) that allows us to sort pcaps
@@ -167,21 +181,13 @@ class SortCap(object):
 
     def __init__(self, path, linktype=1):
         self.name = path
-        self.linktype = linktype
-        self.fd = None
+        self.fd = dpkt.pcap.Reader(open(self.name, "rb"))
+        self.fditer = iter(self.fd)
+        self.linktype = self.fd.datalink()
         self.ctr = 0 # counter to pass through packets without flow info (non-IP)
         self.conns = set()
 
-    def write(self, p):
-        if not self.fd:
-            self.fd = dpkt.pcap.Writer(open(self.name, "wb"), linktype=self.linktype)
-        self.fd.writepkt(p.raw, p.ts)
-
     def __iter__(self):
-        if not self.fd:
-            self.fd = dpkt.pcap.Reader(open(self.name, "rb"))
-            self.fditer = iter(self.fd)
-            self.linktype = self.fd.datalink()
         return self
 
     def close(self):
@@ -210,5 +216,5 @@ class SortCap(object):
 def sort_pcap(inpath, outpath):
     """Use SortCap class together with batch_sort to sort a pcap"""
     inc = SortCap(inpath)
-    batch_sort(inc, outpath, output_class=lambda path: SortCap(path, linktype=inc.linktype))
+    batch_sort(inc, outpath, output_class=lambda path: WriteCap(path, linktype=inc.linktype))
     return 0
