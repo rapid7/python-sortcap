@@ -76,12 +76,13 @@ def flowtuple_from_raw(raw, linktype=1):
     if isinstance(ip, dpkt.ip.IP):
         sip, dip = socket.inet_ntoa(ip.src), socket.inet_ntoa(ip.dst)
         proto = ip.p
+        sport, dport = 0, 0
 
-        if proto == dpkt.ip.IP_PROTO_TCP or proto == dpkt.ip.IP_PROTO_UDP:
+        more_fragments = bool(ip.off & dpkt.ip.IP_MF)
+        fragment_offset = ip.off & dpkt.ip.IP_OFFMASK
+        if (proto == dpkt.ip.IP_PROTO_TCP or proto == dpkt.ip.IP_PROTO_UDP) and not more_fragments and fragment_offset == 0:
             l3 = ip.data
             sport, dport = l3.sport, l3.dport
-        else:
-            sport, dport = 0, 0
 
     else:
         sip, dip, proto = 0, 0, -1
