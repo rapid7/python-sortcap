@@ -77,12 +77,13 @@ def flowtuple_from_raw(raw, linktype=1):
         sip, dip = socket.inet_ntoa(ip.src), socket.inet_ntoa(ip.dst)
         proto = ip.p
         sport, dport = 0, 0
-
-        more_fragments = bool(ip.off & dpkt.ip.IP_MF)
-        fragment_offset = ip.off & dpkt.ip.IP_OFFMASK
-        if (proto == dpkt.ip.IP_PROTO_TCP or proto == dpkt.ip.IP_PROTO_UDP) and not more_fragments and fragment_offset == 0:
-            l3 = ip.data
+        l3 = ip.data
+        # try to get the layer 3 source and destination port, but its ok if this fails,
+        # which will happen when we get IP fragments or packets with invalid checksums
+        try:
             sport, dport = l3.sport, l3.dport
+        except AttributeError:
+            pass
 
     else:
         sip, dip, proto = 0, 0, -1
