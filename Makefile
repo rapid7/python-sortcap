@@ -1,4 +1,4 @@
-image_name = labs-suricata
+image_name = labs-sortcap
 
 docker_build:
 ifndef ECR_HOSTNAME
