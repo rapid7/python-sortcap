@@ -5,7 +5,7 @@ ifndef ECR_HOSTNAME
 	$(error ECR_HOSTNAME variable is not set)
 endif
 	docker build -t ${image_name} --build-arg CACHE_DATE=`date +%Y-%m-%d:%H:%M:%S` .
-	docker tag ${image_name}:latest ${ECR_HOSTNAME}${image_name}:latest
+	docker tag ${image_name}:latest ${ECR_HOSTNAME}/${image_name}:latest
 
 docker_push:
 ifndef ECR_HOSTNAME
